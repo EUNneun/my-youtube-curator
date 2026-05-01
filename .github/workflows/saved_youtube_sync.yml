@@ -1,6 +1,13 @@
 name: Saved YouTube Sync
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "config/playlists.json"
+      - "scripts/sync_saved_playlists.py"
+      - ".github/workflows/saved_youtube_sync.yml"
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:

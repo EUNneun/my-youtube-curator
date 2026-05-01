@@ -41,6 +41,17 @@ The workflow `.github/workflows/saved_youtube_sync.yml` runs every 30 minutes an
 
 The root page at `index.html` loads `videos.json` automatically when served from GitHub Pages or any local web server.
 
+## If the page is empty
+
+Check these in order:
+
+1. GitHub repository `Settings -> Secrets and variables -> Actions` has `YOUTUBE_API_KEY`.
+2. Repository `Actions` tab has a successful `Saved YouTube Sync` run.
+3. The repository file list contains `videos.json` in the root.
+4. Open the Pages URL again with a hard refresh.
+
+You can run the sync immediately from `Actions -> Saved YouTube Sync -> Run workflow`.
+
 ## Limits
 
 - Watch Later is blocked by the YouTube Data API.
