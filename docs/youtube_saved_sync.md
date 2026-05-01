@@ -8,28 +8,24 @@ The current playlist is configured in `config/playlists.json`:
 PLAvDqgTD9HsLLKc56FhJkEtKG2XIaIJ3L
 ```
 
-Because the playlist is public, OAuth is not required for sync. Use a YouTube Data API key stored in GitHub Secrets.
+Because the playlist is public, OAuth is not required for sync. The workflow can read the public playlist without an API key. A YouTube Data API key is optional and can be added later for a more official sync path.
 
 ## Local setup
 
-1. Create a YouTube Data API key in Google Cloud.
-2. Set it as an environment variable locally.
-3. Run the sync:
+Run the sync:
 
 ```powershell
 pip install -r requirements.txt
-$env:YOUTUBE_API_KEY="YOUR_API_KEY"
 python scripts/sync_saved_playlists.py
 ```
 
 ## GitHub Actions setup
 
-Add this repository secret:
+No secret is required for the current public playlist setup.
+
+Optional repository secrets:
 
 - `YOUTUBE_API_KEY`: YouTube Data API key
-
-Optional:
-
 - `YOUTUBE_SAVED_PLAYLIST_IDS`: one playlist ID, or multiple IDs separated by commas
 - `YOUTUBE_OAUTH_TOKEN_JSON`: only needed if you later sync private playlists
 
@@ -50,7 +46,7 @@ Check these in order:
 3. The repository file list contains `videos.json` in the root.
 4. Open the Pages URL again with a hard refresh.
 
-If the workflow says `OAuth client file not found` or `YOUTUBE_API_KEY is required`, the `YOUTUBE_API_KEY` secret is missing or empty.
+If the workflow succeeds but creates only a small list, YouTube's public feed fallback may be limiting results. Add `YOUTUBE_API_KEY` later if you need the official full playlist API path.
 
 You can run the sync immediately from `Actions -> Saved YouTube Sync -> Run workflow`.
 

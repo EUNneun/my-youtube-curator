@@ -15,4 +15,4 @@ A small saved-video dashboard for a private YouTube playlist.
 
 Open `index.html` to use the page with local/manual data.
 
-For automatic YouTube sync, add a YouTube Data API key to GitHub Secrets as `YOUTUBE_API_KEY`, then follow `docs/youtube_saved_sync.md`.
+For automatic YouTube sync, push the repository and run the GitHub Actions workflow. No secret is required for the configured public playlist.

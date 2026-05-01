@@ -35,8 +35,8 @@ jobs:
 
       - name: Sync saved playlists
         env:
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           YOUTUBE_SAVED_PLAYLIST_IDS: ${{ secrets.YOUTUBE_SAVED_PLAYLIST_IDS }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           YOUTUBE_OAUTH_TOKEN_JSON: ${{ secrets.YOUTUBE_OAUTH_TOKEN_JSON }}
         run: python scripts/sync_saved_playlists.py
 
