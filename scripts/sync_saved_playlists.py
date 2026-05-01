@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Sync videos from OAuth-accessible YouTube playlists.
+"""Sync videos from YouTube playlists.
 
-YouTube Data API does not expose Watch Later or watch history items.
-Use this with one or more playlists that the authenticated account owns,
-for example a private playlist named "Summary Inbox".
+Public playlists can be synced with YOUTUBE_API_KEY. Private playlists
+can still use OAuth via YOUTUBE_OAUTH_TOKEN_JSON or local token.json.
 """
 import json
 import os
@@ -20,16 +19,39 @@ from googleapiclient.errors import HttpError
 SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
 CLIENT_SECRET_PATH = Path(os.environ.get("YOUTUBE_CLIENT_SECRET_FILE", "client_secret.json"))
 TOKEN_PATH = Path(os.environ.get("YOUTUBE_TOKEN_FILE", "token.json"))
-PLAYLIST_IDS = [
-    item.strip()
-    for item in os.environ.get("YOUTUBE_SAVED_PLAYLIST_IDS", "").split(",")
-    if item.strip()
-]
+PLAYLIST_CONFIG_PATH = Path("config/playlists.json")
 OUTPUT_PATHS = [
     Path("saved_videos.json"),
     Path("videos.json"),
     Path("site/videos.json"),
 ]
+
+
+def load_playlist_ids():
+    env_value = os.environ.get("YOUTUBE_SAVED_PLAYLIST_IDS", "")
+    ids = [item.strip() for item in env_value.split(",") if item.strip()]
+    if ids:
+        return ids
+
+    if PLAYLIST_CONFIG_PATH.exists():
+        data = json.loads(PLAYLIST_CONFIG_PATH.read_text(encoding="utf-8"))
+        rows = data if isinstance(data, list) else data.get("playlists", [])
+        return [
+            item.get("id", "").strip() if isinstance(item, dict) else str(item).strip()
+            for item in rows
+            if (item.get("id", "").strip() if isinstance(item, dict) else str(item).strip())
+        ]
+
+    return []
+
+
+def build_youtube_client():
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if api_key:
+        return build("youtube", "v3", developerKey=api_key)
+
+    credentials = load_credentials()
+    return build("youtube", "v3", credentials=credentials)
 
 
 def load_credentials():
@@ -153,15 +175,15 @@ def merge_unique(videos):
 
 
 def main():
-    if not PLAYLIST_IDS:
+    playlist_ids = load_playlist_ids()
+    if not playlist_ids:
         print("ERROR: set YOUTUBE_SAVED_PLAYLIST_IDS to one or more playlist IDs", file=sys.stderr)
         sys.exit(1)
 
-    credentials = load_credentials()
-    youtube = build("youtube", "v3", credentials=credentials)
+    youtube = build_youtube_client()
 
     synced = []
-    for playlist_id in PLAYLIST_IDS:
+    for playlist_id in playlist_ids:
         try:
             playlist_videos = fetch_playlist_items(youtube, playlist_id)
             print(f"{playlist_id}: {len(playlist_videos)} videos")

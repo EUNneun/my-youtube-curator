@@ -1,28 +1,37 @@
-# YouTube saved video auto sync
+# YouTube playlist auto sync
 
-YouTube Data API cannot read Watch Later or watch history items. For automatic sync, create a normal private playlist such as `Summary Inbox`, then save videos into that playlist.
+YouTube Data API cannot read Watch Later or watch history items. This project syncs a normal YouTube playlist instead.
+
+The current playlist is configured in `config/playlists.json`:
+
+```text
+PLAvDqgTD9HsLLKc56FhJkEtKG2XIaIJ3L
+```
+
+Because the playlist is public, OAuth is not required for sync. Use a YouTube Data API key stored in GitHub Secrets.
 
 ## Local setup
 
-1. Create a private YouTube playlist for videos you want summarized.
-2. Create a Google OAuth client for a desktop app.
-3. Download the OAuth client JSON and save it as `client_secret.json` in the project root.
-4. Run the first sync locally:
+1. Create a YouTube Data API key in Google Cloud.
+2. Set it as an environment variable locally.
+3. Run the sync:
 
 ```powershell
 pip install -r requirements.txt
-$env:YOUTUBE_SAVED_PLAYLIST_IDS="PLAYLIST_ID"
+$env:YOUTUBE_API_KEY="YOUR_API_KEY"
 python scripts/sync_saved_playlists.py
 ```
 
-The first run opens a browser login and creates `token.json`. Do not commit `client_secret.json` or `token.json`.
-
 ## GitHub Actions setup
 
-Add these repository secrets:
+Add this repository secret:
+
+- `YOUTUBE_API_KEY`: YouTube Data API key
+
+Optional:
 
 - `YOUTUBE_SAVED_PLAYLIST_IDS`: one playlist ID, or multiple IDs separated by commas
-- `YOUTUBE_OAUTH_TOKEN_JSON`: the full contents of local `token.json`
+- `YOUTUBE_OAUTH_TOKEN_JSON`: only needed if you later sync private playlists
 
 The workflow `.github/workflows/saved_youtube_sync.yml` runs every 30 minutes and writes:
 
