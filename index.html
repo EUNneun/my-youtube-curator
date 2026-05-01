@@ -3,70 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube 저장 영상 요약함</title>
+  <title>YouTube 저장 영상 큐레이터</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
+  <header class="page-header">
     <div>
-      <p class="eyebrow">Saved YouTube Library</p>
-      <h1>저장한 영상 요약함</h1>
+      <p class="eyebrow">YouTube Playlist Curator</p>
+      <h1>저장한 영상</h1>
+      <p class="subtitle">재생목록에 추가한 영상을 한눈에 보고, 설명으로 빠르게 다시 고르세요.</p>
     </div>
-    <div class="stats" aria-live="polite">
-      <span id="totalCount">0</span>
-      <small>videos</small>
+    <div class="count-box" aria-live="polite">
+      <strong id="totalCount">0</strong>
+      <span>videos</span>
     </div>
   </header>
 
-  <main class="workspace">
-    <section class="control-panel" aria-label="영상 가져오기 및 필터">
-      <div class="import-box">
-        <label class="file-button">
-          <input id="fileInput" type="file" accept=".json,.csv,.txt,.html,.htm" multiple>
-          파일 불러오기
-        </label>
-        <button id="sampleButton" type="button">샘플 보기</button>
-      </div>
-
-      <textarea id="linkInput" placeholder="YouTube 링크를 한 줄에 하나씩 붙여넣기"></textarea>
-      <div class="import-actions">
-        <button id="parseLinksButton" type="button">목록 만들기</button>
-        <button id="clearButton" type="button">초기화</button>
-      </div>
-
-      <div class="field">
+  <main class="page-shell">
+    <section class="toolbar" aria-label="영상 필터">
+      <div class="search-wrap">
         <label for="searchInput">검색</label>
-        <input id="searchInput" type="search" placeholder="제목, 채널, 요약">
+        <input id="searchInput" type="search" placeholder="제목, 채널, 설명 검색">
       </div>
-
-      <div class="field">
+      <div class="sort-wrap">
         <label for="sortSelect">정렬</label>
         <select id="sortSelect">
-          <option value="savedAtDesc">최근 저장순</option>
+          <option value="savedAtDesc">최근 추가순</option>
           <option value="titleAsc">제목순</option>
           <option value="channelAsc">채널순</option>
         </select>
       </div>
-
-      <div class="topic-list" id="topicList" aria-label="주제 필터"></div>
     </section>
 
-    <section class="content-area">
-      <div class="summary-strip" id="summaryStrip"></div>
-      <div class="video-grid" id="videoGrid"></div>
-      <div class="empty-state" id="emptyState">
-        <h2>저장한 영상 목록을 불러오세요</h2>
-        <p>Google Takeout의 YouTube 기록 파일, 재생목록 CSV/HTML, 또는 YouTube 링크 목록을 사용할 수 있습니다.</p>
-      </div>
+    <nav class="topic-list" id="topicList" aria-label="주제 필터"></nav>
+
+    <section class="video-list" id="videoList" aria-label="저장 영상 목록"></section>
+
+    <section class="empty-state" id="emptyState">
+      <h2>아직 표시할 영상이 없습니다</h2>
+      <p>GitHub Actions 동기화가 끝나면 재생목록의 영상들이 이곳에 자동으로 나타납니다.</p>
     </section>
   </main>
 
-  <template id="videoCardTemplate">
-    <article class="video-card">
+  <template id="videoItemTemplate">
+    <article class="video-item">
       <a class="thumb-link" target="_blank" rel="noopener">
         <img class="thumb" alt="" loading="lazy">
       </a>
-      <div class="card-body">
+      <div class="video-copy">
         <div class="meta-row">
           <span class="topic"></span>
           <span class="saved-at"></span>
@@ -74,10 +58,6 @@
         <h2><a class="title-link" target="_blank" rel="noopener"></a></h2>
         <p class="channel"></p>
         <p class="summary"></p>
-        <div class="actions">
-          <button class="mark-done" type="button">봤음</button>
-          <a class="open-video" target="_blank" rel="noopener">YouTube</a>
-        </div>
       </div>
     </article>
   </template>
