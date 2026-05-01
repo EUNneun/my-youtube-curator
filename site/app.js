@@ -62,7 +62,7 @@ function normalizeVideos(rows) {
     const id = row.id || row.videoId || row.video_id || extractVideoId(url);
     if (!id) return null;
 
-    const title = clean(row.title || row.name || row.videoTitle) || `Saved video ${index + 1}`;
+    const title = clean(row.title || row.name || row.videoTitle) || `저장 영상 ${index + 1}`;
     const channel = clean(row.channel || row.channelTitle || row.videoOwnerChannelTitle) || "Unknown channel";
     const topic = clean(row.topic || row.category) || guessTopic(title);
 
@@ -104,17 +104,17 @@ function clean(value) {
 function guessTopic(title) {
   const text = String(title || "").toLowerCase();
   const rules = [
-    ["AI", ["ai", "agent", "automation", "llm", "gpt"]],
-    ["Planning", ["product", "strategy", "roadmap"]],
-    ["Research", ["research", "interview", "ux"]],
-    ["Development", ["code", "coding", "developer", "api"]],
-    ["Marketing", ["marketing", "growth", "brand"]],
+    ["AI 자동화", ["ai", "agent", "automation", "llm", "gpt", "자동화", "에이전트"]],
+    ["기획", ["product", "strategy", "roadmap", "기획", "전략", "프로덕트"]],
+    ["리서치", ["research", "interview", "ux", "리서치", "인터뷰", "사용자"]],
+    ["개발", ["code", "coding", "developer", "api", "개발", "코딩"]],
+    ["마케팅", ["marketing", "growth", "brand", "마케팅", "브랜드"]],
   ];
-  return rules.find(([, words]) => words.some(word => text.includes(word)))?.[0] || "Uncategorized";
+  return rules.find(([, words]) => words.some(word => text.includes(word)))?.[0] || "미분류";
 }
 
 function makeSummary(title, channel) {
-  return `${channel}의 "${title}" 영상입니다. 동기화된 설명이나 요약이 있으면 이 영역에 표시됩니다.`;
+  return `${channel} 채널의 영상입니다. 제목은 "${title}"이며, 동기화된 설명이나 요약이 있으면 이 영역에 표시됩니다.`;
 }
 
 function filteredVideos() {

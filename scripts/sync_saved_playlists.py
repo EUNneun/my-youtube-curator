@@ -321,22 +321,22 @@ def make_video_record(video_id, title, channel, playlist_id, thumbnail, saved_at
 def guess_topic(title):
     text = title.lower()
     rules = [
-        ("AI Automation", ["ai", "agent", "automation", "llm", "gpt"]),
-        ("Planning", ["product", "strategy", "roadmap"]),
-        ("Research", ["research", "interview", "ux"]),
-        ("Development", ["code", "coding", "developer", "api"]),
-        ("Marketing", ["marketing", "growth", "brand"]),
+        ("AI 자동화", ["ai", "agent", "automation", "llm", "gpt", "자동화", "에이전트"]),
+        ("기획", ["product", "strategy", "roadmap", "기획", "전략", "프로덕트"]),
+        ("리서치", ["research", "interview", "ux", "리서치", "인터뷰", "사용자"]),
+        ("개발", ["code", "coding", "developer", "api", "개발", "코딩"]),
+        ("마케팅", ["marketing", "growth", "brand", "마케팅", "브랜드"]),
     ]
     for topic, words in rules:
         if any(word in text for word in words):
             return topic
-    return "Uncategorized"
+    return "미분류"
 
 
 def make_summary(title, channel):
     return (
-        f"Saved video from {channel}: {title}. This placeholder summary is based on "
-        "playlist metadata; connect transcript collection and an LLM step for full summaries."
+        f"{channel} 채널의 영상입니다. 제목은 \"{title}\"이며, 현재는 공개 재생목록의 메타데이터를 바탕으로 "
+        "자동 정리했습니다. 자막 수집과 AI 요약 단계를 연결하면 실제 영상 내용 기반 요약으로 확장할 수 있습니다."
     )
 
 
