@@ -12,6 +12,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from html import unescape
 from urllib.parse import unquote
 from urllib.request import Request as UrlRequest
 from urllib.request import urlopen
@@ -129,19 +130,20 @@ def fetch_playlist_items(youtube, playlist_id):
                 or f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
             )
             saved_at = snippet.get("publishedAt") or content.get("videoPublishedAt") or ""
+            metadata = fetch_public_video_metadata(video_id)
 
             videos.append({
                 "id": video_id,
                 "video_id": video_id,
                 "url": f"https://www.youtube.com/watch?v={video_id}",
-                "title": title,
-                "channel": channel,
+                "title": metadata.get("title") or title,
+                "channel": metadata.get("channel") or channel,
                 "savedAt": saved_at,
                 "published_at": content.get("videoPublishedAt") or "",
                 "playlistId": playlist_id,
-                "topic": guess_topic(title),
-                "summary": make_summary(title, channel),
-                "thumbnail": thumbnail,
+                "topic": guess_topic(metadata.get("title") or title),
+                "summary": make_summary(metadata.get("title") or title, metadata.get("channel") or channel),
+                "thumbnail": metadata.get("thumbnail") or thumbnail,
                 "source": "saved_playlist",
                 "syncedAt": datetime.now(timezone.utc).isoformat(),
             })
@@ -179,12 +181,13 @@ def fetch_public_playlist_page(playlist_id):
         title = text_from_runs(renderer.get("title")) or "Untitled video"
         channel = text_from_runs(renderer.get("shortBylineText")) or "Unknown channel"
         thumb = thumbnail_from_renderer(renderer) or f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+        metadata = fetch_public_video_metadata(video_id)
         videos.append(make_video_record(
             video_id=video_id,
-            title=title,
-            channel=channel,
+            title=metadata.get("title") or title,
+            channel=metadata.get("channel") or channel,
             playlist_id=playlist_id,
-            thumbnail=thumb,
+            thumbnail=metadata.get("thumbnail") or thumb,
             saved_at="",
             description="",
         ))
@@ -203,16 +206,111 @@ def fetch_public_playlist_feed(playlist_id):
         title = xml_text(entry, "title") or "Untitled video"
         channel = xml_text(entry, "name") or "Unknown channel"
         published = xml_text(entry, "published")
+        metadata = fetch_public_video_metadata(video_id)
         videos.append(make_video_record(
             video_id=video_id,
-            title=title,
-            channel=channel,
+            title=metadata.get("title") or title,
+            channel=metadata.get("channel") or channel,
             playlist_id=playlist_id,
-            thumbnail=f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+            thumbnail=metadata.get("thumbnail") or f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
             saved_at=published,
             description="",
         ))
     return videos
+
+
+def fetch_public_video_metadata(video_id):
+    try:
+        html = fetch_text(f"https://www.youtube.com/watch?v={video_id}&hl=ko&gl=KR")
+    except Exception:
+        return {}
+
+    metadata = {
+        "title": meta_content(html, "og:title") or meta_content(html, "title"),
+        "channel": meta_content(html, "og:video:tag"),
+        "description": meta_content(html, "og:description") or meta_content(html, "description"),
+        "thumbnail": meta_content(html, "og:image"),
+    }
+
+    player = extract_yt_player_response(html)
+    details = player.get("videoDetails", {}) if isinstance(player, dict) else {}
+    microformat = player.get("microformat", {}).get("playerMicroformatRenderer", {}) if isinstance(player, dict) else {}
+
+    metadata["title"] = (
+        details.get("title")
+        or microformat.get("title", {}).get("simpleText")
+        or metadata["title"]
+    )
+    metadata["channel"] = (
+        details.get("author")
+        or microformat.get("ownerChannelName")
+        or metadata["channel"]
+    )
+    metadata["description"] = details.get("shortDescription") or metadata["description"]
+    metadata["thumbnail"] = best_thumbnail(details.get("thumbnail", {}).get("thumbnails", [])) or metadata["thumbnail"]
+
+    return {key: clean_text(value) for key, value in metadata.items() if clean_text(value)}
+
+
+def extract_yt_player_response(html):
+    marker = "var ytInitialPlayerResponse = "
+    start = html.find(marker)
+    if start == -1:
+        marker = "ytInitialPlayerResponse = "
+        start = html.find(marker)
+    if start == -1:
+        return {}
+
+    start = html.find("{", start)
+    if start == -1:
+        return {}
+
+    depth = 0
+    in_string = False
+    escape = False
+    for index in range(start, len(html)):
+        char = html[index]
+        if in_string:
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == "\"":
+                in_string = False
+        else:
+            if char == "\"":
+                in_string = True
+            elif char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    return json.loads(html[start:index + 1])
+    return {}
+
+
+def meta_content(html, name):
+    patterns = [
+        rf'<meta\s+property="{re.escape(name)}"\s+content="([^"]*)"',
+        rf'<meta\s+content="([^"]*)"\s+property="{re.escape(name)}"',
+        rf'<meta\s+name="{re.escape(name)}"\s+content="([^"]*)"',
+        rf'<meta\s+content="([^"]*)"\s+name="{re.escape(name)}"',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, html, flags=re.I)
+        if match:
+            return match.group(1)
+    return ""
+
+
+def best_thumbnail(thumbnails):
+    if not thumbnails:
+        return ""
+    return thumbnails[-1].get("url", "")
+
+
+def clean_text(value):
+    return unescape(str(value or "")).replace("\n", " ").strip()
 
 
 def fetch_text(url):
