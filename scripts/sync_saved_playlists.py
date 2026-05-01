@@ -50,6 +50,12 @@ def build_youtube_client():
     if api_key:
         return build("youtube", "v3", developerKey=api_key)
 
+    if not os.environ.get("YOUTUBE_OAUTH_TOKEN_JSON") and not TOKEN_PATH.exists() and not CLIENT_SECRET_PATH.exists():
+        raise RuntimeError(
+            "YOUTUBE_API_KEY is required for public playlist sync. "
+            "Add it in GitHub: Settings -> Secrets and variables -> Actions -> New repository secret."
+        )
+
     credentials = load_credentials()
     return build("youtube", "v3", credentials=credentials)
 

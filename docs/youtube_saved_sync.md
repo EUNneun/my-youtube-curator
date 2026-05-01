@@ -50,6 +50,8 @@ Check these in order:
 3. The repository file list contains `videos.json` in the root.
 4. Open the Pages URL again with a hard refresh.
 
+If the workflow says `OAuth client file not found` or `YOUTUBE_API_KEY is required`, the `YOUTUBE_API_KEY` secret is missing or empty.
+
 You can run the sync immediately from `Actions -> Saved YouTube Sync -> Run workflow`.
 
 ## Limits
